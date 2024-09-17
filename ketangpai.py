@@ -70,9 +70,7 @@ def get_course(semester_response,course_need):
 
 
 # 进入资料区(content_type=['2','8'])课件区（
-def get_course_material(headers,courseid,data):
-   
-    url = "https://openapiv5.ketangpai.com//FutureV2/CourseMeans/getCourseContent"
+def get_course_material(headers,data,url):
     data["reqtimestamp"]=int(time.time()*1000)
     data = json.dumps(data, separators=(',', ':'))
     response = requests.post(url, headers=headers, data=data)
@@ -86,9 +84,7 @@ def get_course_material(headers,courseid,data):
 
 
 # 进入资料区子文件夹
-def get_dir_content(headers,data):
-    
-    url = "https://openapiv5.ketangpai.com//FutureV2/CourseMeans/getCourseContent"
+def get_dir_content(headers,data,url):
     data["reqtimestamp"]=int(time.time()*1000)
     data = json.dumps(data, separators=(',', ':'))
     try:
@@ -187,8 +183,6 @@ def main():
         "token": token
     }
 
-    data=url = "https://openapiv5.ketangpai.com//FutureV2/CourseMeans/getCourseContent"
-
     while(True):
         semster=input('请输入学年（如2023-2024）')
         term=input('请输入学期（填1或2）')
@@ -208,6 +202,7 @@ def main():
     
         courseid=course["id"]
 # 准备发送的载荷数据
+        material_url = "https://openapiv5.ketangpai.com//FutureV2/CourseMeans/getCourseContent"
         data = {
         "courseid": courseid,
         "contenttype": 1,#课件区是1，资料区是["2","8"]
@@ -229,7 +224,7 @@ def main():
         elif(section_type==2):
             data["contenttype"]=["2","8"]
         #进入相应区
-        material=get_course_material(headers,courseid,data)
+        material=get_course_material(headers,data,material_url)
 
 
         # 是否有子文件夹
@@ -242,7 +237,7 @@ def main():
             dirid=dir_list[dirnum-1]["id"]
             data["dirid"]=dirid
             #进入资料区子文件夹       
-            dir_content=get_dir_content(headers,data)
+            dir_content=get_dir_content(headers,data,material_url)
             #打印资料列表
             content_list=print_material_list(dir_content)
             # 输入下载资料的序号
