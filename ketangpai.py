@@ -1,3 +1,11 @@
+
+# 规范名称：
+# content:资料名称，即要下载的资料（最小单位）
+# material:资料（指课堂派的资料目录）
+# course:课程
+# semester:学年
+# term:学期
+
 import json
 import time
 import requests
@@ -124,10 +132,11 @@ def get_dir_content(headers,courseid,dirid):
 
 
 #获取下载链接
-def get_download_link(dircontent,material_name):
-    for material in dircontent.json()["data"]["list"]:
-        if(material["title"]==material_name):
-            return material['attachment'][0]['url']
+def get_download_link(content_num,content_list):
+    url_list=[]
+    for num in content_num:
+        url_list.append(content_list[int(num)-1]['attachment'][0]['url'])
+    return url_list
 # 进行下载
 def download_material(url,material_name):
     try:
@@ -182,6 +191,7 @@ def print_dir_list(dir_response):
             continue
     return dir_list
 
+
 def main():
     name=input('请输入用户名(账号)')
     password=input('请输入密码')
@@ -205,77 +215,65 @@ def main():
         "sec-ch-ua-platform": "\"Windows\"",
         "token": token
     }
-    semster=input('请输入学年（如2023-2024）')
-    term=input('请输入学期（填1或2）')
-    #请求课表
-    semester_response=get_semester_list(headers,semester=semster,term=term)
+    while(True):
+        semster=input('请输入学年（如2023-2024）')
+        term=input('请输入学期（填1或2）')
+        #请求课表
+        semester_response=get_semester_list(headers,semester=semster,term=term)
 
-    # 打印课表
-    course_list=print_semester_list(semester_response)
+        # 打印课表
+        course_list=print_semester_list(semester_response)
 
-    #选择课程
-    coursenum=int(input('请输入课程序号（课程名字前面的序号）'))
-    #获取课程名字
-    course_need=course_list[coursenum-1]["coursename"]
+        #选择课程
+        coursenum=int(input('请输入课程序号（课程名字前面的序号）'))
+        #获取课程名字
+        course_need=course_list[coursenum-1]["coursename"]
 
-    #进入课堂
-    course=get_course(semester_response,course_need)
-   
-    courseid=course["id"]
-     #进入资料区
-    material=get_course_material(headers,courseid)
+        #进入课堂
+        course=get_course(semester_response,course_need)
+    
+        courseid=course["id"]
+        #进入资料区
+        material=get_course_material(headers,courseid)
 
 
-    # 是否有子文件夹
-    sub=input('资料是否在子文件夹中（填1或0）,1表示在，0表示不在')
-    if(sub=='1'):
-        #打印子文件夹信息
-        dir_list=print_dir_list(material)
-        dirnum=int(input('请输入子文件夹序号（子文件夹名字前面的序号）'))
-        # 获取dirid
-        dirid=dir_list[dirnum-1]["id"]
-        #进入资料区子文件夹       
-        dir_content=get_dir_content(headers,courseid,dirid)
-        #打印资料列表
-        material_list=print_material_list(dir_content)
-        all=int(input('是否下载所有该文件夹这种的资料（填1或0）,1表示是，0表示不是'))
-        if(all==1):
-            for content in material_list:
-                try:
-                    url=get_download_link(dir_content,content["title"])
-                    download_material(url,content["title"])
-                except Exception as e:
-                    continue
-            return
-        else:
-            # 输入下载资料的名字
-            content_num=input('请输入下载资料的序号(资料名字前面的序号)')
-            content_name=material_list[int(content_num)-1]["title"]
+        # 是否有子文件夹
+        sub=input('资料是否在子文件夹中（填1或0）,1表示在，0表示不在')
+        if(sub=='1'):
+            #打印子文件夹信息
+            dir_list=print_dir_list(material)
+            dirnum=int(input('请输入子文件夹序号（子文件夹名字前面的序号）'))
+            # 获取dirid
+            dirid=dir_list[dirnum-1]["id"]
+            #进入资料区子文件夹       
+            dir_content=get_dir_content(headers,courseid,dirid)
+            #打印资料列表
+            content_list=print_material_list(dir_content)
+            # 输入下载资料的序号
+            content_num=input('请输入下载资料的序号(资料名字前面的序号),输入多个序号时用一个空格隔开')
+            content_num=content_num.split(sep=' ')
             #获取资料链接
-            url=get_download_link(dir_content,content_name)
-    else:
-        #打印资料列表
-        material_list=print_material_list(material)
-        # 输入下载资料的名字
-        all=int(input('是否下载所有该文件夹这种的资料（填1或0）,1表示是，0表示不是'))
-        if(all==1):
-            for content in material_list:
-                try:
-                    url=get_download_link(material,content["title"])
-                    download_material(url,content["title"])
-                except Exception as e:
-                    continue
-            return
+            url_list=get_download_link(content_num,content_list)   
         else:
-            content_num=input('请输入下载资料的序号(资料名字前面的序号)')
-            content_name=material_list[int(content_num)-1]["title"]
+            #打印资料列表
+            content_list=print_material_list(material)
+            # 输入下载资料的序号
+            content_num=input('请输入下载资料的序号(资料名字前面的序号),输入多个序号时用一个空格隔开')
+            content_num=content_num.split(sep=' ')
             #获取资料链接
-            url=get_download_link(material,content_name)
-
-    #下载资料
-    print('开始下载\n')
-    download_material(url,content_name)
-
+            url_list=get_download_link(content_num,content_list)
+        #下载资料
+        num=0
+        for url in url_list:
+            print(f'开始下载第{num+1}个资料')
+            content_name=content_list[num-1]["title"]
+            download_material(url,content_name)
+            num+=1
+        print('如果退出，请输入q,否则输入任意键继续下载')
+        if(input()=='q'):
+            break
+        else:
+            continue
 
 if __name__ == '__main__':
     main()
