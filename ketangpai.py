@@ -69,26 +69,11 @@ def get_course(semester_response,course_need):
             return course
 
 
-# 进入资料区(content_type=['2','8'])
-def get_course_material(headers,courseid):
+# 进入资料区(content_type=['2','8'])课件区（
+def get_course_material(headers,courseid,data):
    
     url = "https://openapiv5.ketangpai.com//FutureV2/CourseMeans/getCourseContent"
-    data = {
-        "courseid": courseid,
-        "contenttype": [
-            "2",
-            "8"
-        ],
-        "dirid": 0,
-        "lessonlink": [],
-        "sort": [],
-        "page": 1,
-        "limit": 50,
-        "desc": 3,
-        "courserole": 0,
-        "vtr_type": "",
-        "reqtimestamp":int(time.time()*1000)
-    }
+    data["reqtimestamp"]=int(time.time()*1000)
     data = json.dumps(data, separators=(',', ':'))
     response = requests.post(url, headers=headers, data=data)
     try:
@@ -101,25 +86,10 @@ def get_course_material(headers,courseid):
 
 
 # 进入资料区子文件夹
-def get_dir_content(headers,courseid,dirid):
+def get_dir_content(headers,data):
     
     url = "https://openapiv5.ketangpai.com//FutureV2/CourseMeans/getCourseContent"
-    data = {
-        "courseid": courseid,
-        "contenttype": [
-            "2",
-            "8"
-        ],
-        "dirid": dirid,
-        "lessonlink": [],
-        "sort": [],
-        "page": 1,
-        "limit": 50,
-        "desc": 3,
-        "courserole": 0,
-        "vtr_type": "",
-        "reqtimestamp": int(time.time() * 1000)
-    }
+    data["reqtimestamp"]=int(time.time()*1000)
     data = json.dumps(data, separators=(',', ':'))
     try:
         response = requests.post(url, headers=headers, data=data)
@@ -193,7 +163,6 @@ def print_dir_list(dir_response):
             continue
     return dir_list
 
-
 def main():
     name=input('请输入用户名(账号)')
     password=input('请输入密码')
@@ -217,6 +186,9 @@ def main():
         "sec-ch-ua-platform": "\"Windows\"",
         "token": token
     }
+
+    data=url = "https://openapiv5.ketangpai.com//FutureV2/CourseMeans/getCourseContent"
+
     while(True):
         semster=input('请输入学年（如2023-2024）')
         term=input('请输入学期（填1或2）')
@@ -235,20 +207,42 @@ def main():
         course=get_course(semester_response,course_need)
     
         courseid=course["id"]
-        #进入资料区
-        material=get_course_material(headers,courseid)
+# 准备发送的载荷数据
+        data = {
+        "courseid": courseid,
+        "contenttype": 1,#课件区是1，资料区是["2","8"]
+        "dirid": 0,
+        "lessonlink": [],
+        "sort": [],
+        "page": 1,
+        "limit": 50,
+        "desc": 3,
+        "courserole": 0,
+        "vtr_type": "",
+        "reqtimestamp": 0
+    }
+        
+    #判断进入资料区还是课件区
+        section_type=int(input('请输入1进入课件区，2进入资料区'))
+        if(section_type==1):
+            data["contenttype"]=1
+        elif(section_type==2):
+            data["contenttype"]=["2","8"]
+        #进入相应区
+        material=get_course_material(headers,courseid,data)
 
 
         # 是否有子文件夹
         sub=input('资料是否在子文件夹中（填1或0）,1表示在，0表示不在')
-        if(sub=='1'):
+        if(sub=='1'and section_type==2):
             #打印子文件夹信息
             dir_list=print_dir_list(material)
             dirnum=int(input('请输入子文件夹序号（子文件夹名字前面的序号）'))
             # 获取dirid
             dirid=dir_list[dirnum-1]["id"]
+            data["dirid"]=dirid
             #进入资料区子文件夹       
-            dir_content=get_dir_content(headers,courseid,dirid)
+            dir_content=get_dir_content(headers,data)
             #打印资料列表
             content_list=print_material_list(dir_content)
             # 输入下载资料的序号
@@ -256,7 +250,7 @@ def main():
             content_num=content_num.split(sep=' ')
             #获取资料链接
             url_list=get_download_link(content_num,content_list)   
-        else:
+        if (sub=='0'or section_type==1):
             #打印资料列表
             content_list=print_material_list(material)
             # 输入下载资料的序号
