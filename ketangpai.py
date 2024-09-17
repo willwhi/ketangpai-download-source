@@ -141,13 +141,14 @@ def get_download_link(content_num,content_list):
 def download_material(url,material_name):
     try:
         headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36 Edg/110.0.1587.69",
         }
-        response = requests.get(url)
+        # 采用流式下载，显示实时进度条
+        response = requests.get(url,stream=True)
         total_size=int(response.headers.get('Content-Length',0))
         progress_bar = tqdm(total=total_size, unit='B', unit_scale=True)
         with open( f".\{material_name}", "wb") as f:
-            for chunk in response.iter_content(chunk_size=8):
+            for chunk in response.iter_content(chunk_size=8192):
                 if chunk: 
                     f.write(chunk)
                     progress_bar.update(len(chunk))
@@ -171,6 +172,7 @@ def print_semester_list(semester_response):
 def print_material_list(material_response):
     material_list=material_response.json()["data"]["list"]
     i=1
+    material_list = [material for material in material_list if material['item_type'] != '3'] # 过滤掉item_type为3的元素,不能在循环中删除，会破坏索引
     for material in material_list:
         try:
             print(f"{i}."+material['title'])
