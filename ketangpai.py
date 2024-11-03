@@ -255,9 +255,9 @@ def main():
             url_list=get_download_link(content_num,content_list)
         #下载资料
         num=0
-        for url in url_list:
+        for url,num_need in zip( url_list, content_num ):
             print(f'开始下载第{num+1}个资料')
-            content_name=content_list[num-1]["title"]
+            content_name=content_list[int(num_need)-1]["title"]
             download_material(url,content_name)
             num+=1
         print('如果退出，请输入q,否则输入任意键继续下载')
