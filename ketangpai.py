@@ -185,7 +185,7 @@ def main():
 
     while(True):
         semster=input('请输入学年（如2023-2024）')
-        term=input('请输入学期（填1或2）')
+        term=input('请输入学期（填1或2）,如果为整个学年，则填0')
         #请求课表
         semester_response=get_semester_list(headers,semester=semster,term=term)
 
