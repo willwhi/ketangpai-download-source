@@ -10,7 +10,7 @@ import json
 import time
 import requests
 from tqdm import tqdm
-   
+import encrypt
 #登录
 def login(name,password):
     reqtimestamp = int(time.time() * 1000)
@@ -19,6 +19,7 @@ def login(name,password):
         "sec-ch-ua-mobile": "?0",   
     }
     url = "https://openapiv5.ketangpai.com//UserApi/login"
+    password = encrypt.encrypt("ktp4567890123456", "ktp4567890123456", "pkcs7", password)
     data = {
         "email": name,
         "password": password,
@@ -26,14 +27,13 @@ def login(name,password):
         "code": "",
         "mobile": "",
         "type": "login",
-        "encryption": 0,
+        "encryption": 1,
         "reqtimestamp": reqtimestamp
     }
     data = json.dumps(data, separators=(',', ':'))
     try:
         response = requests.post(url, headers=headers, data=data)
         print("登录成功")
-        token= response.json()["data"]["token"]
         return response
     except Exception as e:
         print("登录失败")
