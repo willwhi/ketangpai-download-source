@@ -13,6 +13,7 @@ class Content:
     def __init__(self,type,id):
         self.__type = type
         self.__id = id
+        self.__url=""
     def set_url(self,url):
         self.__url = url
     def set_type(self,type):
@@ -29,7 +30,7 @@ class Content:
         return self.__type
 
 
-def get_content_list(response:requests.response):
+def get_content_list(response:requests.Response):
     content_list=[]
     try:
         for content_raw in response.json()["data"]["list"]:

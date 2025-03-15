@@ -23,7 +23,7 @@ def get_course_list(headers,semester,term):
     try:
         response = requests.post(url, headers=headers, data=data)
         print("获取课表成功")
-        course_list=[Course(course["coursename"],course["id"]) for course in response.json()["data"][0]]
+        course_list=[Course(course["coursename"],course["id"]) for course in response.json()["data"]]
         return course_list
     except Exception as e:
         print("获取课表失败")
